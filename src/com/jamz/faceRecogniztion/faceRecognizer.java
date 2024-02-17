@@ -131,21 +131,12 @@ public class faceRecognizer extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                faceRecognizer frame = new faceRecognizer();
-                
-                frame.setVisible(true);
-                
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        frame.startCamera();
-                    }
-                    
-                }).start();
-            }
+        EventQueue.invokeLater(() -> {
+            faceRecognizer frame = new faceRecognizer();
+            
+            frame.setVisible(true);
+            
+            new Thread(frame::startCamera).start();
         });
     }
 
