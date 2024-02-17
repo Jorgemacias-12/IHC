@@ -1,6 +1,8 @@
 package com.jamz.faceRecogniztion;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Image;
 import java.nio.file.Paths;
 import javax.swing.ImageIcon;
 import javax.swing.UIManager;
@@ -26,55 +28,62 @@ public class faceRecognizer extends javax.swing.JFrame {
     
     private final int CAMERA_HARDWARE_ID = 0;
     private final int DETECTION_THICKNESS = 4;
+    private final int CAMERA_WAIT_TIME = 100;
     
     private final String CASCADE_FILENAME = "haarcascade_frontalface_alt.xml";
     private final Scalar FACE_DETECTED_COLOR = new Scalar(0, 255, 0);
     private final String DOWNLOADS_FOLDER = Paths.get(System.getProperty("user.home"), "Downloads").toString();
     private final String CASCADE_FULLPATH = Paths.get(DOWNLOADS_FOLDER, CASCADE_FILENAME).toString();
     
-    
-    private final CascadeClassifier faceCascade;
-    
+    private CascadeClassifier faceCascade;
     private VideoCapture capture;
     private Mat image;
+    private MatOfRect faceDetections;
+    
+    private Thread cameraThread;
     
     public faceRecognizer() {
         initComponents();
         
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
             
-        faceCascade = new CascadeClassifier();
-        
-        faceCascade.load(CASCADE_FULLPATH);
-        
         frameConfiguration();
+        startCamera();
     }
     
     private void frameConfiguration() {
         setLocationRelativeTo(null);
+        
+        this.setPreferredSize(new Dimension(1280, 720));
     }
     
     protected void startCamera() {
+        faceCascade = new CascadeClassifier();
+        faceCascade.load(CASCADE_FULLPATH);
+        
         capture = new VideoCapture(CAMERA_HARDWARE_ID);
         image = new Mat();
-        
+    }
+    
+    private void makeRecognition() {
         byte[] data;
-        
-        ImageIcon icon;
         
         while(true) {
             capture.read(image);
             
-            MatOfRect faceDetections = new MatOfRect();
+            faceDetections = new MatOfRect();
             
             faceCascade.detectMultiScale(image, faceDetections);
             
-            for(Rect rect : faceDetections.toArray()) {
+            // Update UI
+            Lbl_FacesDetected.setText("Caras detectadas: " + faceDetections.size());
+            
+            for (Rect rect: faceDetections.toArray()) {
                 Imgproc.rectangle(image,
-                                  new Point(rect.x, rect.y),
-                                  new Point(rect.x + rect.width, rect.y + rect.height),
-                                  FACE_DETECTED_COLOR,
-                                  DETECTION_THICKNESS);
+                                new Point(rect.x, rect.y),
+                                new Point(rect.x + rect.width, rect.y + rect.height),
+                                FACE_DETECTED_COLOR,
+                                DETECTION_THICKNESS); 
             }
             
             MatOfByte buffer = new MatOfByte();
@@ -83,9 +92,13 @@ public class faceRecognizer extends javax.swing.JFrame {
             
             data = buffer.toArray();
             
-            icon = new ImageIcon(data);
+            Image scaledImage = new ImageIcon(data).getImage().getScaledInstance(
+                Lbl_Camera.getWidth(), 
+                Lbl_Camera.getHeight(), 
+                Image.SCALE_SMOOTH
+            );
             
-            Lbl_Camera.setIcon(icon);
+            Lbl_Camera.setIcon(new ImageIcon(scaledImage));
         }
     }
     
@@ -99,7 +112,11 @@ public class faceRecognizer extends javax.swing.JFrame {
     private void initComponents() {
 
         Lbl_Title = new javax.swing.JLabel();
-        Pnl_Camera = new javax.swing.JPanel();
+        Pnl_Controls = new javax.swing.JPanel();
+        Lbl_FacesDetected = new javax.swing.JLabel();
+        Cmb_Devices = new javax.swing.JComboBox<>();
+        Btn_Start = new javax.swing.JButton();
+        Lbl_CaptureDevices = new javax.swing.JLabel();
         Lbl_Camera = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -109,17 +126,45 @@ public class faceRecognizer extends javax.swing.JFrame {
         Lbl_Title.setText("Open CV - Face recognition");
         Lbl_Title.setVerifyInputWhenFocusTarget(false);
 
-        Pnl_Camera.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(32, 32, 32), 5, true));
+        Pnl_Controls.setBackground(new java.awt.Color(204, 204, 204));
 
-        javax.swing.GroupLayout Pnl_CameraLayout = new javax.swing.GroupLayout(Pnl_Camera);
-        Pnl_Camera.setLayout(Pnl_CameraLayout);
-        Pnl_CameraLayout.setHorizontalGroup(
-            Pnl_CameraLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(Lbl_Camera, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        Lbl_FacesDetected.setText("Caras detectadas:");
+
+        Btn_Start.setText("Detectar caras");
+        Btn_Start.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                Btn_StartActionPerformed(evt);
+            }
+        });
+
+        Lbl_CaptureDevices.setText("Dispositivos de captura:");
+
+        javax.swing.GroupLayout Pnl_ControlsLayout = new javax.swing.GroupLayout(Pnl_Controls);
+        Pnl_Controls.setLayout(Pnl_ControlsLayout);
+        Pnl_ControlsLayout.setHorizontalGroup(
+            Pnl_ControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(Pnl_ControlsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(Lbl_FacesDetected, javax.swing.GroupLayout.PREFERRED_SIZE, 459, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(Lbl_CaptureDevices)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(Cmb_Devices, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(Btn_Start, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
-        Pnl_CameraLayout.setVerticalGroup(
-            Pnl_CameraLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(Lbl_Camera, javax.swing.GroupLayout.DEFAULT_SIZE, 417, Short.MAX_VALUE)
+        Pnl_ControlsLayout.setVerticalGroup(
+            Pnl_ControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(Pnl_ControlsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(Pnl_ControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(Pnl_ControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(Lbl_FacesDetected, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(Cmb_Devices, javax.swing.GroupLayout.DEFAULT_SIZE, 41, Short.MAX_VALUE)
+                        .addComponent(Lbl_CaptureDevices))
+                    .addComponent(Btn_Start, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -129,8 +174,11 @@ public class faceRecognizer extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(Lbl_Title, javax.swing.GroupLayout.DEFAULT_SIZE, 615, Short.MAX_VALUE)
-                    .addComponent(Pnl_Camera, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(Lbl_Camera, javax.swing.GroupLayout.PREFERRED_SIZE, 707, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(Lbl_Title, javax.swing.GroupLayout.DEFAULT_SIZE, 1268, Short.MAX_VALUE)
+                    .addComponent(Pnl_Controls, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -139,12 +187,27 @@ public class faceRecognizer extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(Lbl_Title)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(Pnl_Camera, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(Pnl_Controls, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(Lbl_Camera, javax.swing.GroupLayout.PREFERRED_SIZE, 519, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(88, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void Btn_StartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Btn_StartActionPerformed
+        cameraThread = new Thread(() -> {
+            makeRecognition();
+        });
+        
+        if (cameraThread.isAlive()) {
+            cameraThread.interrupt();
+            cameraThread.start();
+        }
+        
+        cameraThread.start();
+    }//GEN-LAST:event_Btn_StartActionPerformed
 
     /**
      * @param args the command line arguments
@@ -167,14 +230,18 @@ public class faceRecognizer extends javax.swing.JFrame {
             
             frame.setVisible(true);
             
-            new Thread(frame::startCamera).start();
+            //new Thread(frame::startCamera).start();
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton Btn_Start;
+    private javax.swing.JComboBox<String> Cmb_Devices;
     private javax.swing.JLabel Lbl_Camera;
+    private javax.swing.JLabel Lbl_CaptureDevices;
+    private javax.swing.JLabel Lbl_FacesDetected;
     private javax.swing.JLabel Lbl_Title;
-    private javax.swing.JPanel Pnl_Camera;
+    private javax.swing.JPanel Pnl_Controls;
     // End of variables declaration//GEN-END:variables
 
 }
