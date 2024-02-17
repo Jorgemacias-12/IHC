@@ -1,8 +1,6 @@
 package com.jamz.faceRecogniztion;
 
 import java.awt.EventQueue;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
