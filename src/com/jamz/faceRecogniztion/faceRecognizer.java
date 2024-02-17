@@ -28,7 +28,6 @@ public class faceRecognizer extends javax.swing.JFrame {
     
     private final int CAMERA_HARDWARE_ID = 0;
     private final int DETECTION_THICKNESS = 4;
-    private final int CAMERA_WAIT_TIME = 100;
     
     private final String CASCADE_FILENAME = "haarcascade_frontalface_alt.xml";
     private final Scalar FACE_DETECTED_COLOR = new Scalar(0, 255, 0);
