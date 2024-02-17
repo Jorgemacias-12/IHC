@@ -29,8 +29,8 @@ public class faceRecognizer extends javax.swing.JFrame {
     
     private final String CASCADE_FILENAME = "haarcascade_frontalface_alt.xml";
     private final Scalar FACE_DETECTED_COLOR = new Scalar(0, 255, 0);
-    private final String downloadsFolder = Paths.get(System.getProperty("user.home"), "Downloads").toString();
-    private final String CASCADE_FULLPATH = Paths.get(downloadsFolder, CASCADE_FILENAME).toString();
+    private final String DOWNLOADS_FOLDER = Paths.get(System.getProperty("user.home"), "Downloads").toString();
+    private final String CASCADE_FULLPATH = Paths.get(DOWNLOADS_FOLDER, CASCADE_FILENAME).toString();
     
     
     private final CascadeClassifier faceCascade;
