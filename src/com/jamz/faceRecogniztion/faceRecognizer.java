@@ -8,6 +8,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 
 /**
@@ -18,15 +19,25 @@ import org.opencv.videoio.VideoCapture;
 public class faceRecognizer extends javax.swing.JFrame {
     
     private final int CAMERA_HARDWARE_ID = 0;
+    private final String CASCADE_FILENAME = "haarcascade_frontalface_alt.xml";
+    
+    private String downloadsFolder = System.getProperty("user.home") + "\\Downloads\\";
+    
+    private String CASCADE_FULLPATH = String.format("%s%s", downloadsFolder, CASCADE_FILENAME);
     
     private VideoCapture capture;
     private Mat image;
+    private CascadeClassifier faceCascade;
     
     
     public faceRecognizer() {
         initComponents();
         
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+            
+        faceCascade = new CascadeClassifier();
+        
+        faceCascade.load(CASCADE_FULLPATH);
         
         frameConfiguration();
     }
