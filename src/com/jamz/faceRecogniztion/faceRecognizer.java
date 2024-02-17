@@ -24,18 +24,18 @@ import org.opencv.videoio.VideoCapture;
 public class faceRecognizer extends javax.swing.JFrame {
     
     private final int CAMERA_HARDWARE_ID = 0;
-    private final String CASCADE_FILENAME = "haarcascade_frontalface_alt.xml";
-    private final Scalar FACE_DETECTED_COLOR = new Scalar(0, 255, 0);
     private final int DETECTION_THICKNESS = 4;
     
-    private String downloadsFolder = System.getProperty("user.home") + "\\Downloads\\";
+    private final String CASCADE_FILENAME = "haarcascade_frontalface_alt.xml";
+    private final Scalar FACE_DETECTED_COLOR = new Scalar(0, 255, 0);
+    private final String downloadsFolder = System.getProperty("user.home") + "\\Downloads\\";
+    private final String CASCADE_FULLPATH = String.format("%s%s", downloadsFolder, CASCADE_FILENAME);
     
-    private String CASCADE_FULLPATH = String.format("%s%s", downloadsFolder, CASCADE_FILENAME);
+    
+    private final CascadeClassifier faceCascade;
     
     private VideoCapture capture;
     private Mat image;
-    private CascadeClassifier faceCascade;
-    
     
     public faceRecognizer() {
         initComponents();
