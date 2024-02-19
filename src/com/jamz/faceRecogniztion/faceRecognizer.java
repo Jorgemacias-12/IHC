@@ -6,6 +6,9 @@ import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -20,12 +23,6 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
-import com.jamz.utils.Utils;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 /**
  * 
  * @author Jorge
@@ -47,7 +44,7 @@ public class faceRecognizer extends javax.swing.JFrame {
     private Mat image;
     private MatOfRect faceDetections;
     
-    private final List<Person> detectedFaces = new ArrayList<>();
+    private final List<Rect> detectedFaces = new ArrayList<>();
     //private final Set<Integer> detectedFaces = new HashSet<>();
     
     private Thread cameraThread;
@@ -92,6 +89,10 @@ public class faceRecognizer extends javax.swing.JFrame {
             
             faceCascade.detectMultiScale(image, faceDetections);
             
+            detectedFaces.clear();
+            
+            detectedFaces.addAll(Arrays.asList(faceDetections.toArray()));
+            
             // Update UI
             Lbl_FacesDetected.setText("Caras detectadas: " + detectedFaces.size());
             
@@ -119,11 +120,6 @@ public class faceRecognizer extends javax.swing.JFrame {
             );
             
             Lbl_Camera.setIcon(new ImageIcon(scaledImage));
-            
-            // Txt_PersonName.setEditable(true);
-            // Btn_AddPerson.setEnabled(true);
-            
-            // showDetectedPersons();
         }
     }
     
